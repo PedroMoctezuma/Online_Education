@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditorías - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --main-yellow: #f4c613; --dark-bg: #1a1a1a; }
+        .text-yellow { color: var(--main-yellow); }
+        .btn-main { background-color: var(--main-yellow); color: black; font-weight: bold; border-radius: 0; padding: 12px 30px; border: none; }
+        .btn-main:hover { background-color: #d4ac0d; }
+        .btn-outline-main { border: 2px solid var(--main-yellow); color: var(--main-yellow); background: transparent; border-radius: 0; padding: 8px 20px; font-weight: bold; text-decoration: none; display: inline-block; text-align: center; margin: 0 5px; white-space: nowrap; }
+        .btn-outline-main:hover { background-color: var(--main-yellow); color: black; }
+        
+        footer { background-color: var(--dark-bg); color: white; padding: 60px 0; }
+        .nav-menu-btn { margin-left: 10px; white-space: nowrap; }
+        .navbar-nav { flex-direction: row; align-items: center; }
+
+        @media (max-width: 992px) {
+            .navbar-nav { flex-direction: column; align-items: flex-start; }
+            .nav-menu-btn { margin: 5px 0; width: 100%; text-align: left; }
+        }
+
+        .page-header { background: linear-gradient(135deg, var(--dark-bg) 0%, #2a2a2a 100%); padding: 40px 0; margin-bottom: 40px; }
+        .notification-badge { position: relative; top: -8px; right: 5px; background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; display: inline-block; margin-left: 5px; }
+        .table-auditoria { font-size: 0.85rem; }
+        .table-auditoria th { white-space: nowrap; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/admin-dashboard/"><span class="text-yellow">ONLINE</span> EDUCATION</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase align-items-center">
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-dashboard/">Inicio</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-gestionar-cursos/">Cursos</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-gestionar-grupos/">Grupos</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-gestionar-instructores/">Instructores</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-gestionar-estudiantes/">Estudiantes</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-reportes/">Reportes</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-auditorias/">Auditorías</a></li>
+                    <li class="nav-item">
+                        <a class="btn btn-outline-main nav-menu-btn" href="/mensajes/">
+                            <i class="fas fa-envelope"></i> Mensajes
+                            {% if mensajes_no_leidos > 0 %}
+                            <span class="notification-badge">{{ mensajes_no_leidos }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/logout/">Cerrar Sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page-header">
+        <div class="container">
+            <h1 class="display-5 fw-bold text-white"><span class="text-yellow">Auditorías</span> del Sistema</h1>
+            <p class="text-white-50">Registro completo de cambios en inscripciones, evaluaciones, pagos, estudiantes, entregas, instructores, cursos y grupos</p>
+        </div>
+    </section>
+
+    <div class="container mb-5">
+        
+        <!-- =========================================== -->
+        <!-- AUDITORÍA DE INSCRIPCIONES -->
+        <!-- =========================================== -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-book me-2"></i>Auditoría de Inscripciones</h5>
+                <small class="text-white-50">Campos: ID, Inscripción ID, Acción, Usuario, Estado Anterior, Estado Nuevo, Total Pago Anterior, Total Pago Nuevo, Fecha</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm table-auditoria">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Inscripción ID</th>
+                                <th>Acción</th>
+                                <th>Usuario</th>
+                                <th>Estado Anterior</th>
+                                <th>Estado Nuevo</th>
+                                <th>Pago Anterior</th>
+                                <th>Pago Nuevo</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auditoria in auditoria_inscripciones %}
+                            <tr>
+                                <td>{{ auditoria.auditoria_ins_id }}</td>
+                                <td>{{ auditoria.inscripcion_id }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ auditoria.accion }}</span></td>
+                                <td>{{ auditoria.usuario_nombre|default:"-" }}</td>
+                                <td>{{ auditoria.edo_ant|default:"-" }}</td>
+                                <td>{{ auditoria.edo_nuevo|default:"-" }}</td>
+                                <td>${{ auditoria.total_pago_anterior|default:"-" }}</td>
+                                <td>${{ auditoria.total_pago_nuevo|default:"-" }}</td>
+                                <td>{{ auditoria.fecha_evento|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-3">No hay registros de auditoría de inscripciones.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================== -->
+        <!-- AUDITORÍA DE EVALUACIONES -->
+        <!-- =========================================== -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-star me-2"></i>Auditoría de Evaluaciones</h5>
+                <small class="text-white-50">Campos: ID, Evaluación ID, Acción, Usuario, Calificación Anterior, Calificación Nueva, Comentario Anterior, Comentario Nuevo, Fecha</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm table-auditoria">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Evaluación ID</th>
+                                <th>Acción</th>
+                                <th>Usuario</th>
+                                <th>Calif. Anterior</th>
+                                <th>Calif. Nueva</th>
+                                <th>Comentario Anterior</th>
+                                <th>Comentario Nuevo</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auditoria in auditoria_evaluaciones %}
+                            <tr>
+                                <td>{{ auditoria.auditoria_eva_id }}</td>
+                                <td>{{ auditoria.evaluacion_id }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ auditoria.accion }}</span></td>
+                                <td>{{ auditoria.usuario_nombre|default:"-" }}</td>
+                                <td>{{ auditoria.cal_ante|default:"-" }}</td>
+                                <td>{{ auditoria.cal_nuev|default:"-" }}</td>
+                                <td>
+                                    {% if auditoria.coment_ant %}
+                                        [CIFRADO]
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.coment_nuev %}
+                                        [CIFRADO]
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ auditoria.fecha_evento|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-3">No hay registros de auditoría de evaluaciones.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================== -->
+        <!-- AUDITORÍA DE PAGOS -->
+        <!-- =========================================== -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Auditoría de Pagos</h5>
+                <small class="text-white-50">Campos: ID, Pago ID, Acción, Usuario, Monto Anterior, Monto Nuevo, Referencia Anterior, Referencia Nueva, Fecha</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm table-auditoria">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Pago ID</th>
+                                <th>Acción</th>
+                                <th>Usuario</th>
+                                <th>Monto Anterior</th>
+                                <th>Monto Nuevo</th>
+                                <th>Referencia Anterior</th>
+                                <th>Referencia Nueva</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auditoria in auditoria_pagos %}
+                            <tr>
+                                <td>{{ auditoria.auditoria_pago_id }}</td>
+                                <td>{{ auditoria.pago_id }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ auditoria.accion }}</span></td>
+                                <td>{{ auditoria.usuario_nombre|default:"-" }}</td>
+                                <td>${{ auditoria.monto_ant|default:"-" }}</td>
+                                <td>${{ auditoria.monto_nuev|default:"-" }}</td>
+                                <td>
+                                    {% if auditoria.referencia_pago_ant %}
+                                        [CIFRADO]
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.referencia_pago_nuev %}
+                                        [CIFRADO]
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ auditoria.fecha_evento|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-3">No hay registros de auditoría de pagos.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================== -->
+        <!-- AUDITORÍA DE ESTUDIANTES -->
+        <!-- =========================================== -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Auditoría de Estudiantes</h5>
+                <small class="text-white-50">Campos: ID, Estudiante ID, Acción, Usuario, Nombre, Apellidos, Teléfono, Dirección, Tipo Documento, N° Documento, Fecha</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm table-auditoria">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Estudiante ID</th>
+                                <th>Acción</th>
+                                <th>Usuario</th>
+                                <th>Nombre</th>
+                                <th>Apellidos</th>
+                                <th>Teléfono</th>
+                                <th>Dirección</th>
+                                <th>Tipo Documento</th>
+                                <th>N° Documento</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auditoria in auditoria_estudiantes %}
+                            <tr>
+                                <td>{{ auditoria.auditoria_est_id }}</td>
+                                <td>{{ auditoria.estudiante_id }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ auditoria.accion }}</span></td>
+                                <td>{{ auditoria.usuario_nombre|default:"-" }}</td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.nombre_ant|default:"-" }} → {{ auditoria.nombre_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.nombre_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.nombre_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.apellidos_ant|default:"-" }} → {{ auditoria.apellidos_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.apellidos_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.apellidos_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.telefono_ant|default:"-" }} → {{ auditoria.telefono_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.telefono_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.telefono_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.direccion_ant|default:"-" }} → {{ auditoria.direccion_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.direccion_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.direccion_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.tipo_documento_ant|default:"-" }} → {{ auditoria.tipo_documento_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.tipo_documento_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.tipo_documento_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {% if auditoria.numero_documento_ant and auditoria.numero_documento_nuev %}
+                                            [CIFRADO] → [CIFRADO]
+                                        {% elif auditoria.numero_documento_nuev %}
+                                            [CIFRADO]
+                                        {% elif auditoria.numero_documento_ant %}
+                                            [CIFRADO]
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    {% else %}
+                                        {% if auditoria.numero_documento_nuev %}
+                                            [CIFRADO]
+                                        {% elif auditoria.numero_documento_ant %}
+                                            [CIFRADO]
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>{{ auditoria.fecha_evento|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="11" class="text-center py-3">No hay registros de auditoría de estudiantes.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================== -->
+        <!-- AUDITORÍA DE ENTREGAS -->
+        <!-- =========================================== -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Auditoría de Entregas</h5>
+                <small class="text-white-50">Campos: ID, Entrega ID, Acción, Usuario, Archivo Anterior, Archivo Nuevo, Comentario Anterior, Comentario Nuevo, Calificación Anterior, Calificación Nueva, Fecha</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm table-auditoria">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Entrega ID</th>
+                                <th>Acción</th>
+                                <th>Usuario</th>
+                                <th>Archivo Anterior</th>
+                                <th>Archivo Nuevo</th>
+                                <th>Comentario Anterior</th>
+                                <th>Comentario Nuevo</th>
+                                <th>Calif. Anterior</th>
+                                <th>Calif. Nueva</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auditoria in auditoria_entregas %}
+                            <tr>
+                                <td>{{ auditoria.auditoria_ent_id }}</td>
+                                <td>{{ auditoria.entrega_id }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ auditoria.accion }}</span></td>
+                                <td>{{ auditoria.usuario_nombre|default:"-" }}</td>
+                                <td>
+                                    {% if auditoria.archivo_ant %}
+                                        [ARCHIVO]
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.archivo_nuev %}
+                                        [ARCHIVO]
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ auditoria.comentario_ant|default:"-" }}</td>
+                                <td>{{ auditoria.comentario_nuev|default:"-" }}</td>
+                                <td>{{ auditoria.calificacion_ant|default:"-" }}</td>
+                                <td>{{ auditoria.calificacion_nuev|default:"-" }}</td>
+                                <td>{{ auditoria.fecha_evento|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="11" class="text-center py-3">No hay registros de auditoría de entregas.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================== -->
+        <!-- AUDITORÍA DE INSTRUCTORES -->
+        <!-- =========================================== -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-chalkboard-user me-2"></i>Auditoría de Instructores</h5>
+                <small class="text-white-50">Campos: ID, Instructor ID, Acción, Usuario, Nombre, Apellidos, Especialidad, Estado, Cédula, Fecha</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm table-auditoria">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Instructor ID</th>
+                                <th>Acción</th>
+                                <th>Usuario</th>
+                                <th>Nombre</th>
+                                <th>Apellidos</th>
+                                <th>Especialidad</th>
+                                <th>Estado</th>
+                                <th>Cédula</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auditoria in auditoria_instructores %}
+                            <tr>
+                                <td>{{ auditoria.auditoria_ins_id }}</td>
+                                <td>{{ auditoria.instructor_id }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ auditoria.accion }}</span></td>
+                                <td>{{ auditoria.usuario_nombre|default:"-" }}</td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.nombre_ant|default:"-" }} → {{ auditoria.nombre_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.nombre_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.nombre_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.apellidos_ant|default:"-" }} → {{ auditoria.apellidos_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.apellidos_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.apellidos_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.especialidad_ant|default:"-" }} → {{ auditoria.especialidad_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.especialidad_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.especialidad_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.estado_ant|default:"-" }} → {{ auditoria.estado_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.estado_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.estado_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {% if auditoria.cedula_ant and auditoria.cedula_nuev %}
+                                            [CIFRADO] → [CIFRADO]
+                                        {% elif auditoria.cedula_nuev %}
+                                            [CIFRADO]
+                                        {% elif auditoria.cedula_ant %}
+                                            [CIFRADO]
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    {% else %}
+                                        {% if auditoria.cedula_nuev %}
+                                            [CIFRADO]
+                                        {% elif auditoria.cedula_ant %}
+                                            [CIFRADO]
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>{{ auditoria.fecha_evento|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center py-3">No hay registros de auditoría de instructores.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================== -->
+        <!-- AUDITORÍA DE CURSOS -->
+        <!-- =========================================== -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Auditoría de Cursos</h5>
+                <small class="text-white-50">Campos: ID, Curso ID, Acción, Usuario, Nombre, Categoría, Duración, Costo, Estado, Fecha</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm table-auditoria">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Curso ID</th>
+                                <th>Acción</th>
+                                <th>Usuario</th>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Duración</th>
+                                <th>Costo</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auditoria in auditoria_cursos %}
+                            <tr>
+                                <td>{{ auditoria.auditoria_cur_id }}</td>
+                                <td>{{ auditoria.curso_id }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ auditoria.accion }}</span></td>
+                                <td>{{ auditoria.usuario_nombre|default:"-" }}</td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.nombre_ant|default:"-" }} → {{ auditoria.nombre_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.nombre_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.nombre_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.categoria_ant|default:"-" }} → {{ auditoria.categoria_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.categoria_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.categoria_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.duracion_ant|default:"-" }} → {{ auditoria.duracion_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.duracion_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.duracion_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        ${{ auditoria.costo_ant|default:"-" }} → ${{ auditoria.costo_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        ${{ auditoria.costo_nuev|default:"-" }}
+                                    {% else %}
+                                        ${{ auditoria.costo_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.estado_ant|default:"-" }} → {{ auditoria.estado_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.estado_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.estado_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ auditoria.fecha_evento|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center py-3">No hay registros de auditoría de cursos.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================== -->
+        <!-- AUDITORÍA DE GRUPOS -->
+        <!-- =========================================== -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Auditoría de Grupos</h5>
+                <small class="text-white-50">Campos: ID, Grupo ID, Acción, Usuario, Curso, Instructor, Cupo Máximo, Cupo Disponible, Fecha Inicio, Fecha</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm table-auditoria">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Grupo ID</th>
+                                <th>Acción</th>
+                                <th>Usuario</th>
+                                <th>Curso</th>
+                                <th>Instructor</th>
+                                <th>Cupo Máximo</th>
+                                <th>Cupo Disponible</th>
+                                <th>Fecha Inicio</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auditoria in auditoria_grupos %}
+                            <tr>
+                                <td>{{ auditoria.auditoria_gru_id }}</td>
+                                <td><span class="badge bg-dark">{{ auditoria.grupo_id }}</span></td>
+                                <td><span class="badge bg-warning text-dark">{{ auditoria.accion }}</span></td>
+                                <td>{{ auditoria.usuario_nombre|default:"-" }}</td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.curso_ant|default:"-" }} → {{ auditoria.curso_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.curso_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.curso_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.instructor_ant|default:"-" }} → {{ auditoria.instructor_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.instructor_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.instructor_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.cupo_maximo_ant|default:"-" }} → {{ auditoria.cupo_maximo_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.cupo_maximo_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.cupo_maximo_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.cupo_disponible_ant|default:"-" }} → {{ auditoria.cupo_disponible_nuev|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.cupo_disponible_nuev|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.cupo_disponible_ant|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if auditoria.accion == 'UPDATE' %}
+                                        {{ auditoria.fecha_inicio_ant|date:"d/m/Y"|default:"-" }} → {{ auditoria.fecha_inicio_nuev|date:"d/m/Y"|default:"-" }}
+                                    {% elif auditoria.accion == 'INSERT' %}
+                                        {{ auditoria.fecha_inicio_nuev|date:"d/m/Y"|default:"-" }}
+                                    {% else %}
+                                        {{ auditoria.fecha_inicio_ant|date:"d/m/Y"|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ auditoria.fecha_evento|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center py-3">No hay registros de auditoría de grupos.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">ONLINE EDUCATION</h4>
+                    <p>Plataforma líder en formación técnica avanzada con estándares de seguridad industrial.</p>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">ENLACES</h4>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white text-decoration-none">Políticas de Privacidad</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Términos de Servicio</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">SÍGUENOS</h4>
+                    <div class="d-flex gap-3 fs-4">
+                        <a href="#" class="text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

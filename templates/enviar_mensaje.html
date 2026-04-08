@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Mensaje - Online Education</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --main-yellow: #f4c613; --dark-bg: #1a1a1a; }
+        .text-yellow { color: var(--main-yellow); }
+        .btn-main { background-color: var(--main-yellow); color: black; font-weight: bold; border-radius: 0; padding: 12px 30px; border: none; }
+        .btn-main:hover { background-color: #d4ac0d; }
+        .btn-outline-main { border: 2px solid var(--main-yellow); color: var(--main-yellow); background: transparent; border-radius: 0; padding: 8px 20px; font-weight: bold; text-decoration: none; display: inline-block; text-align: center; margin: 0 5px; white-space: nowrap; }
+        .btn-outline-main:hover { background-color: var(--main-yellow); color: black; }
+        footer { background-color: var(--dark-bg); color: white; padding: 60px 0; }
+        .nav-menu-btn { margin-left: 10px; white-space: nowrap; }
+        .navbar-nav { flex-direction: row; align-items: center; }
+        @media (max-width: 992px) {
+            .navbar-nav { flex-direction: column; align-items: flex-start; }
+            .nav-menu-btn { margin: 5px 0; width: 100%; text-align: left; }
+        }
+        .page-header { background: linear-gradient(135deg, var(--dark-bg) 0%, #2a2a2a 100%); padding: 40px 0; margin-bottom: 40px; }
+        .notification-badge { position: relative; top: -8px; right: 5px; background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; display: inline-block; margin-left: 5px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/{% if rol == 'estudiante' %}estudiante-dashboard{% elif rol == 'instructor' %}instructor-dashboard{% else %}admin-dashboard{% endif %}/"><span class="text-yellow">ONLINE</span> EDUCATION</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase align-items-center">
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/{% if rol == 'estudiante' %}estudiante-dashboard{% elif rol == 'instructor' %}instructor-dashboard{% else %}admin-dashboard{% endif %}/">Inicio</a></li>
+                    {% if rol == 'estudiante' %}
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/estudiante-mis-cursos/">Mis Cursos</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/estudiante-mis-calificaciones/">Mis Calificaciones</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/estudiante-mis-pagos/">Mis Pagos</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/estudiante-cursos-disponibles/">Cursos Disponibles</a></li>
+                    {% elif rol == 'instructor' %}
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/instructor-mis-grupos/">Mis Grupos</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/instructor-gestionar-evaluaciones/">Evaluaciones</a></li>
+                    {% elif rol == 'admin' %}
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-gestionar-cursos/">Cursos</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-gestionar-grupos/">Grupos</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-gestionar-instructores/">Instructores</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-gestionar-estudiantes/">Estudiantes</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-reportes/">Reportes</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/admin-auditorias/">Auditorías</a></li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="btn btn-outline-main nav-menu-btn" href="/mensajes/">
+                            <i class="fas fa-envelope"></i> Mensajes
+                            {% if mensajes_no_leidos > 0 %}
+                            <span class="notification-badge">{{ mensajes_no_leidos }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/logout/">Cerrar Sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page-header">
+        <div class="container">
+            <h1 class="display-5 fw-bold text-white">Nuevo <span class="text-yellow">Mensaje</span></h1>
+            <p class="text-white-50">Envía un mensaje a otro usuario</p>
+        </div>
+    </section>
+
+    <div class="container mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Para (destinatario)</label>
+                                <select name="receptor_id" class="form-select" required>
+                                    <option value="">Selecciona un usuario...</option>
+                                    {% for usuario in usuarios %}
+                                    <option value="{{ usuario.usuario_id }}" {% if destinatario_preseleccionado and destinatario_preseleccionado.usuario_id == usuario.usuario_id %}selected{% endif %}>
+                                        {% if usuario.estudiantes %}
+                                            {{ usuario.estudiantes.nombre }} {{ usuario.estudiantes.apellidos }} ({{ usuario.email }}) - Estudiante
+                                        {% elif usuario.instructores %}
+                                            {{ usuario.instructores.nombre }} {{ usuario.instructores.apellidos }} ({{ usuario.email }}) - Instructor
+                                        {% else %}
+                                            {{ usuario.email }} ({{ usuario.rol.nombre_rol }})
+                                        {% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Asunto</label>
+                                <input type="text" name="asunto" class="form-control" placeholder="Asunto del mensaje" value="{{ asunto_preseleccionado }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Mensaje</label>
+                                <textarea name="contenido" class="form-control" rows="6" placeholder="Escribe tu mensaje aquí..." required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Relacionar con tarea (opcional)</label>
+                                <select name="tarea_id" class="form-select">
+                                    <option value="">Ninguna</option>
+                                    {% for tarea in tareas %}
+                                    <option value="{{ tarea.tarea_id }}" {% if tarea_id_predefinida|stringformat:"s" == tarea.tarea_id|stringformat:"s" %}selected{% endif %}>
+                                        {{ tarea.titulo }} - {{ tarea.grupo.curso.nombre_curso }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="/mensajes/" class="btn btn-outline-main">Cancelar</a>
+                                <button type="submit" class="btn btn-main">ENVIAR MENSAJE <i class="fas fa-paper-plane ms-2"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">ONLINE EDUCATION</h4>
+                    <p>Plataforma líder en formación técnica avanzada con estándares de seguridad industrial.</p>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">ENLACES</h4>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white text-decoration-none">Políticas de Privacidad</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Términos de Servicio</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">SÍGUENOS</h4>
+                    <div class="d-flex gap-3 fs-4">
+                        <a href="#" class="text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Evaluaciones - Instructor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --main-yellow: #f4c613; --dark-bg: #1a1a1a; }
+        .text-yellow { color: var(--main-yellow); }
+        .btn-main { background-color: var(--main-yellow); color: black; font-weight: bold; border-radius: 0; padding: 12px 30px; border: none; }
+        .btn-main:hover { background-color: #d4ac0d; }
+        .btn-outline-main { border: 2px solid var(--main-yellow); color: var(--main-yellow); background: transparent; border-radius: 0; padding: 8px 20px; font-weight: bold; text-decoration: none; display: inline-block; text-align: center; margin: 0 5px; }
+        .btn-outline-main:hover { background-color: var(--main-yellow); color: black; }
+        footer { background-color: var(--dark-bg); color: white; padding: 60px 0; }
+        
+        /* Estilos del Menú Dashboard */
+        .nav-menu-btn { margin-left: 10px; white-space: nowrap; }
+        .navbar-nav { flex-direction: row; align-items: center; }
+        @media (max-width: 992px) {
+            .navbar-nav { flex-direction: column; align-items: flex-start; }
+            .nav-menu-btn { margin: 5px 0; }
+        }
+        .notification-badge { position: relative; top: -8px; right: 5px; background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; display: inline-block; margin-left: 5px; }
+
+        .page-header { background: linear-gradient(135deg, var(--dark-bg) 0%, #2a2a2a 100%); padding: 40px 0; margin-bottom: 40px; }
+        .badge-calificacion { background-color: var(--main-yellow); color: black; font-size: 1.2rem; padding: 5px 15px; border-radius: 0; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/instructor-dashboard/"><span class="text-yellow">ONLINE</span> EDUCATION</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase align-items-center">
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/instructor-dashboard/">Inicio</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/instructor-mis-grupos/">Mis Grupos</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/instructor-gestionar-evaluaciones/">Evaluaciones</a></li>
+                    <li class="nav-item">
+                        <a class="btn btn-outline-main nav-menu-btn" href="/mensajes/">
+                            <i class="fas fa-envelope"></i> Mensajes
+                            {% if mensajes_no_leidos > 0 %}
+                            <span class="notification-badge">{{ mensajes_no_leidos }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/logout/">Cerrar Sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 fw-bold text-white">Gestionar <span class="text-yellow">Evaluaciones</span></h1>
+                    <p class="text-white-50">{{ grupo_actual.curso.nombre_curso }} - Inicio: {{ grupo_actual.fecha_inicio|date:"d/m/Y" }}</p>
+                </div>
+                <a href="/instructor-gestionar-evaluaciones/" class="btn btn-outline-main">Cambiar Grupo</a>
+            </div>
+        </div>
+    </section>
+
+    <div class="container mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>Email</th>
+                                <th>Calificación</th>
+                                <th>Comentarios (cifrados)</th>
+                                <th>Fecha</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in estudiantes_con_evaluacion %}
+                            <tr>
+                                <td><strong>{{ item.estudiante.nombre }} {{ item.estudiante.apellidos }}</strong></td>
+                                <td>{{ item.estudiante.usuario.email }}</td>
+                                <td>
+                                    {% if item.evaluacion %}
+                                    <span class="badge-calificacion">{{ item.evaluacion.calificacion }}/10</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Sin calificar</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.evaluacion and item.evaluacion.comentarios %}
+                                    <span class="text-muted">[Comentario cifrado]</span>
+                                    {% else %}
+                                    <span class="text-muted">Sin comentarios</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.evaluacion %}
+                                    {{ item.evaluacion.fecha|date:"d/m/Y" }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-main btn-sm" data-bs-toggle="modal" data-bs-target="#modalEvaluacion{{ item.estudiante.estudiante_id }}">
+                                        {% if item.evaluacion %}Editar{% else %}Calificar{% endif %}
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <div class="modal fade" id="modalEvaluacion{{ item.estudiante.estudiante_id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form method="POST" action="/instructor-registrar-evaluacion/">
+                                            {% csrf_token %}
+                                            <div class="modal-header bg-dark text-white">
+                                                <h5 class="modal-title">Calificar a {{ item.estudiante.nombre }} {{ item.estudiante.apellidos }}</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <input type="hidden" name="inscripcion_id" value="{{ item.inscripcion.inscripcion_id }}">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Calificación (0-10)</label>
+                                                    <input type="number" name="calificacion" class="form-control" step="0.1" min="0" max="10" value="{{ item.evaluacion.calificacion|default:'' }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Comentarios (se cifrarán automáticamente)</label>
+                                                    <textarea name="comentario" class="form-control" rows="3">{% if item.evaluacion %}{% endif %}</textarea>
+                                                    <small class="text-muted">Los comentarios se almacenarán cifrados en la base de datos.</small>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-main">Guardar Evaluación</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3">No hay estudiantes inscritos en este grupo.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">ONLINE EDUCATION</h4>
+                    <p>Plataforma líder en formación técnica avanzada con estándares de seguridad industrial.</p>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">ENLACES</h4>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white text-decoration-none">Políticas de Privacidad</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Términos de Servicio</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">SÍGUENOS</h4>
+                    <div class="d-flex gap-3 fs-4">
+                        <a href="#" class="text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

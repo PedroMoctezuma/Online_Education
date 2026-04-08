@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Django
+*.log
+db.sqlite3
+.DS_Store
+*.pyc
+
+# Base de datos
+*.mdf
+*.ldf
+
+# Variables de entorno
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Archivos temporales
+*.tmp
+*.bak
+*.backup
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Archivos de prueba
+test_*.py
+*_test.py

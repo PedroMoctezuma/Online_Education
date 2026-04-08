@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Education | Professional Learning</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --main-yellow: #f4c613; --dark-bg: #1a1a1a; }
+        .bg-yellow { background-color: var(--main-yellow); }
+        .text-yellow { color: var(--main-yellow); }
+        .hero-section { background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070') no-repeat center center/cover; height: 80vh; display: flex; align-items: center; color: white; }
+        .btn-main { background-color: var(--main-yellow); color: black; font-weight: bold; border-radius: 0; padding: 12px 30px; border: none; }
+        .btn-main:hover { background-color: #d4ac0d; }
+        .btn-outline-main { border: 2px solid var(--main-yellow); color: var(--main-yellow); background: transparent; border-radius: 0; padding: 8px 20px; font-weight: bold; text-decoration: none; display: inline-block; text-align: center; margin: 0 5px; }
+        .btn-outline-main:hover { background-color: var(--main-yellow); color: black; }
+        .section-title { border-left: 5px solid var(--main-yellow); padding-left: 15px; margin-bottom: 30px; }
+        footer { background-color: var(--dark-bg); color: white; padding: 60px 0; }
+        .nav-menu-btn { margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/"><span class="text-yellow">ONLINE</span> EDUCATION</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase align-items-center">
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/">Inicio</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/login/">Iniciar Sesión</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="#contacto">Contacto</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-7">
+                    <h1 class="display-3 fw-bold">Impulsa tu carrera con <br><span class="text-yellow">Expertos Reales</span></h1>
+                    <p class="lead mt-3">Aprende de los mejores instructores en Ciberseguridad, Backend y Arquitectura de Software.</p>
+                    <a href="/login/" class="btn btn-main mt-4">COMENZAR AHORA <i class="fas fa-chevron-right ms-2"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="cursos" class="py-5">
+        <div class="container">
+            <h2 class="section-title">NUESTROS <span class="text-yellow">CURSOS</span></h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-shield-alt fa-3x text-yellow mb-3"></i>
+                            <h3>Ciberseguridad</h3>
+                            <p>Domina el Ethical Hacking y la protección de infraestructuras críticas.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-code fa-3x text-yellow mb-3"></i>
+                            <h3>Desarrollo Backend</h3>
+                            <p>Especialízate en Python, Django y escalabilidad de servidores.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-database fa-3x text-yellow mb-3"></i>
+                            <h3>Bases de Datos</h3>
+                            <p>Diseño avanzado, optimización de queries y seguridad SQL Server.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contacto">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">ONLINE EDUCATION</h4>
+                    <p>Plataforma líder en formación técnica avanzada con estándares de seguridad industrial.</p>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">ENLACES</h4>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white text-decoration-none">Políticas de Privacidad</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Términos de Servicio</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">SÍGUENOS</h4>
+                    <div class="d-flex gap-3 fs-4">
+                        <a href="#" class="text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calificar Entrega</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --main-yellow: #f4c613; --dark-bg: #1a1a1a; }
+        .text-yellow { color: var(--main-yellow); }
+        .btn-main { background-color: var(--main-yellow); color: black; font-weight: bold; border-radius: 0; padding: 12px 30px; border: none; }
+        .btn-main:hover { background-color: #d4ac0d; }
+        .btn-outline-main { border: 2px solid var(--main-yellow); color: var(--main-yellow); background: transparent; border-radius: 0; padding: 8px 20px; font-weight: bold; text-decoration: none; display: inline-block; text-align: center; margin: 0 5px; }
+        .btn-outline-main:hover { background-color: var(--main-yellow); color: black; }
+        footer { background-color: var(--dark-bg); color: white; padding: 60px 0; }
+        .nav-menu-btn { margin-left: 10px; }
+        .page-header { background: linear-gradient(135deg, var(--dark-bg) 0%, #2a2a2a 100%); padding: 40px 0; margin-bottom: 40px; }
+        .submission-detail { border-left: 4px solid var(--main-yellow); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/instructor-dashboard/"><span class="text-yellow">ONLINE</span> EDUCATION</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase align-items-center">
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/instructor-dashboard/">Inicio</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/instructor-mis-grupos/">Mis Grupos</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/instructor-gestionar-evaluaciones/">Evaluaciones</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-main nav-menu-btn" href="/logout/">Cerrar Sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page-header">
+        <div class="container">
+            <h1 class="display-5 fw-bold text-white">Calificar <span class="text-yellow">Entrega</span></h1>
+            <p class="text-white-50">Revisar y calificar tarea</p>
+        </div>
+    </section>
+
+    <div class="container mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center">
+                        {% if entrega.no_existe %}
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h3 class="text-muted">No hay entregas</h3>
+                            <p class="text-muted">La entrega que buscas no existe o ha sido eliminada.</p>
+                            <a href="/instructor-mis-grupos/" class="btn btn-outline-main">Volver a Mis Grupos</a>
+                        {% else %}
+                            <!-- Todo el contenido normal del formulario de calificación -->
+                            <div class="submission-detail p-3 mb-4 bg-light text-start">
+                                <h5><i class="fas fa-info-circle me-2"></i>Información de la tarea</h5>
+                                <p><strong>Descripción:</strong> {{ entrega.tarea.descripcion|default:"Sin descripción" }}</p>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-muted"><i class="fas fa-calendar-alt me-1"></i> Límite: {{ entrega.tarea.fecha_limite|date:"d/m/Y" }}</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted"><i class="fas fa-star me-1"></i> Puntaje máximo: {{ entrega.tarea.puntaje_maximo }}</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="submission-detail p-3 mb-4 text-start">
+                                <h5><i class="fas fa-paper-plane me-2"></i>Entrega del estudiante</h5>
+                                <p><strong>Estudiante:</strong> {{ entrega.inscripcion.estudiante.nombre }} {{ entrega.inscripcion.estudiante.apellidos }}</p>
+                                <p><strong>Fecha de entrega:</strong> {{ entrega.fecha_entrega|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Comentario del estudiante:</strong></p>
+                                <div class="bg-light p-3 rounded">
+                                    {{ entrega.comentario|default:"Sin comentario" }}
+                                </div>
+                            </div>
+
+                            <form method="POST" class="text-start">
+                                {% csrf_token %}
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Calificación</label>
+                                    <input type="number" name="calificacion" class="form-control" step="0.1" min="0" max="{{ entrega.tarea.puntaje_maximo }}" value="{{ entrega.calificacion|default:'' }}" required>
+                                    <small class="text-muted">Máximo: {{ entrega.tarea.puntaje_maximo }} puntos</small>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Comentario del instructor</label>
+                                    <textarea name="comentario_instructor" class="form-control" rows="4" placeholder="Agrega retroalimentación para el estudiante...">{{ entrega.comentario_instructor|default:'' }}</textarea>
+                                </div>
+                                <div class="d-flex justify-content-between mt-4">
+                                    <a href="/instructor-dashboard/" class="btn btn-outline-main">Cancelar</a>
+                                    <button type="submit" class="btn btn-main">GUARDAR CALIFICACIÓN <i class="fas fa-save ms-2"></i></button>
+                                </div>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">ONLINE EDUCATION</h4>
+                    <p>Plataforma líder en formación técnica avanzada con estándares de seguridad industrial.</p>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">ENLACES</h4>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white text-decoration-none">Políticas de Privacidad</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Términos de Servicio</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="fw-bold text-yellow mb-4">SÍGUENOS</h4>
+                    <div class="d-flex gap-3 fs-4">
+                        <a href="#" class="text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
