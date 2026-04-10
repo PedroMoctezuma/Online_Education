@@ -67,6 +67,34 @@
         </div>
     </section>
 
+    <!-- Filtro por Tipo de Documento (Fragmentación Horizontal) -->
+    <div class="container mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <form method="GET" class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label class="fw-bold">Filtrar por tipo de documento:</label>
+                    </div>
+                    <div class="col-auto">
+                        <select name="tipo_documento" class="form-select">
+                            <option value="">Todos los estudiantes</option>
+                            <option value="INE" {% if tipo_seleccionado == 'INE' %}selected{% endif %}>Solo INE</option>
+                            <option value="Pasaporte" {% if tipo_seleccionado == 'Pasaporte' %}selected{% endif %}>Solo Pasaporte</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-main">Filtrar</button>
+                    </div>
+                    {% if tipo_seleccionado %}
+                    <div class="col-auto">
+                        <a href="/admin-gestionar-estudiantes/" class="btn btn-outline-secondary">Limpiar filtro</a>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="container mb-5">
         <div class="card border-0 shadow-sm">
             <div class="card-body">

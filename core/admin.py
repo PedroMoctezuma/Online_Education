@@ -9,7 +9,7 @@ from django.utils.html import format_html
 from .models import *
 
 # ======================================================
-# FORMULARIOS PERSONALIZADOS PARA CIFRADO
+# FORMULARIOS PERSONALIZADOS CON LÓGICA CREAR/EDITAR
 # ======================================================
 
 class InstructorForm(forms.ModelForm):
@@ -21,23 +21,45 @@ class InstructorForm(forms.ModelForm):
         model = Instructores
         fields = ('nombre', 'apellidos', 'especialidad', 'estado')
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            # EDITAR: quitar campos que NO se pueden editar
+            self.fields.pop('email', None)
+            self.fields.pop('password', None)
+            self.fields.pop('cedula_profesional_texto', None)
+            # Los campos editables son: nombre, apellidos, especialidad, estado
+    
     def save(self, commit=True):
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                EXEC Registrar_Instructor %s, %s, %s, %s, %s, %s, %s
-            """, [
-                self.cleaned_data['email'],
-                self.cleaned_data['password'],
-                self.cleaned_data['nombre'],
-                self.cleaned_data['apellidos'],
-                self.cleaned_data.get('especialidad', ''),
-                self.cleaned_data['cedula_profesional_texto'],
-                self.cleaned_data['estado']
-            ])
+        instance = super().save(commit=False)
         
-        usuario = Usuarios.objects.get(email=self.cleaned_data['email'])
-        instructor = Instructores.objects.get(usuario=usuario)
-        return instructor
+        with connection.cursor() as cursor:
+            if self.instance.pk:  # EDITAR - solo UPDATE de campos NO cifrados
+                cursor.execute("""
+                    UPDATE Instructores 
+                    SET Nombre = %s, Apellidos = %s, Especialidad = %s, Estado = %s
+                    WHERE Instructor_ID = %s
+                """, [
+                    instance.nombre, instance.apellidos, 
+                    instance.especialidad or '', instance.estado, 
+                    self.instance.pk
+                ])
+                return instance
+            else:  # CREAR - INSERT usando SP (cifra los datos)
+                cursor.execute("""
+                    EXEC Registrar_Instructor %s, %s, %s, %s, %s, %s, %s
+                """, [
+                    self.cleaned_data['email'],
+                    self.cleaned_data['password'],
+                    instance.nombre,
+                    instance.apellidos,
+                    instance.especialidad or '',
+                    self.cleaned_data['cedula_profesional_texto'],
+                    instance.estado
+                ])
+                usuario = Usuarios.objects.get(email=self.cleaned_data['email'])
+                instructor = Instructores.objects.get(usuario=usuario)
+                return instructor
     
     def save_m2m(self):
         pass
@@ -52,24 +74,47 @@ class EstudianteForm(forms.ModelForm):
         model = Estudiantes
         fields = ('nombre', 'apellidos', 'direccion', 'telefono', 'tipo_documento')
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            # EDITAR: quitar campos que NO se pueden editar
+            self.fields.pop('email', None)
+            self.fields.pop('password', None)
+            self.fields.pop('numero_documento_texto', None)
+            # Los campos editables son: nombre, apellidos, direccion, telefono, tipo_documento
+    
     def save(self, commit=True):
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                EXEC Registrar_Estudiante %s, %s, %s, %s, %s, %s, %s, %s
-            """, [
-                self.cleaned_data['email'],
-                self.cleaned_data['password'],
-                self.cleaned_data['nombre'],
-                self.cleaned_data['apellidos'],
-                self.cleaned_data.get('direccion', ''),
-                self.cleaned_data.get('telefono', ''),
-                self.cleaned_data.get('tipo_documento', ''),
-                self.cleaned_data['numero_documento_texto']
-            ])
+        instance = super().save(commit=False)
         
-        usuario = Usuarios.objects.get(email=self.cleaned_data['email'])
-        estudiante = Estudiantes.objects.get(usuario=usuario)
-        return estudiante
+        with connection.cursor() as cursor:
+            if self.instance.pk:  # EDITAR - solo UPDATE de campos NO cifrados
+                cursor.execute("""
+                    UPDATE Estudiantes 
+                    SET Nombre = %s, Apellidos = %s, Direccion = %s, 
+                        Telefono = %s, Tipo_Documento = %s
+                    WHERE Estudiante_ID = %s
+                """, [
+                    instance.nombre, instance.apellidos, 
+                    instance.direccion or '', instance.telefono or '', 
+                    instance.tipo_documento or '', self.instance.pk
+                ])
+                return instance
+            else:  # CREAR - INSERT usando SP (cifra los datos)
+                cursor.execute("""
+                    EXEC Registrar_Estudiante %s, %s, %s, %s, %s, %s, %s, %s
+                """, [
+                    self.cleaned_data['email'],
+                    self.cleaned_data['password'],
+                    instance.nombre,
+                    instance.apellidos,
+                    instance.direccion or '',
+                    instance.telefono or '',
+                    instance.tipo_documento or '',
+                    self.cleaned_data['numero_documento_texto']
+                ])
+                usuario = Usuarios.objects.get(email=self.cleaned_data['email'])
+                estudiante = Estudiantes.objects.get(usuario=usuario)
+                return estudiante
     
     def save_m2m(self):
         pass
@@ -81,19 +126,33 @@ class CursoForm(forms.ModelForm):
         fields = ('nombre_curso', 'categoria', 'duracion_horas', 'costo', 'estado')
     
     def save(self, commit=True):
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                EXEC Registrar_Curso %s, %s, %s, %s, %s
-            """, [
-                self.cleaned_data['nombre_curso'],
-                self.cleaned_data.get('categoria', ''),
-                self.cleaned_data.get('duracion_horas', 0),
-                self.cleaned_data['costo'],
-                self.cleaned_data['estado']
-            ])
+        instance = super().save(commit=False)
         
-        curso = Cursos.objects.get(nombre_curso=self.cleaned_data['nombre_curso'])
-        return curso
+        with connection.cursor() as cursor:
+            if self.instance.pk:  # EDITAR - UPDATE
+                cursor.execute("""
+                    UPDATE Cursos 
+                    SET Nombre_Curso = %s, Categoria = %s, Duracion_Horas = %s, 
+                        Costo = %s, Estado = %s
+                    WHERE Curso_ID = %s
+                """, [
+                    instance.nombre_curso, instance.categoria or '', 
+                    instance.duracion_horas or 0, instance.costo, instance.estado,
+                    self.instance.pk
+                ])
+                return instance
+            else:  # CREAR - INSERT usando SP
+                cursor.execute("""
+                    EXEC Registrar_Curso %s, %s, %s, %s, %s
+                """, [
+                    instance.nombre_curso,
+                    instance.categoria or '',
+                    instance.duracion_horas or 0,
+                    instance.costo,
+                    instance.estado
+                ])
+                curso = Cursos.objects.get(nombre_curso=instance.nombre_curso)
+                return curso
     
     def save_m2m(self):
         pass
@@ -104,23 +163,43 @@ class GrupoForm(forms.ModelForm):
         model = Grupos
         fields = ('curso', 'instructor', 'cupo_maximo', 'fecha_inicio')
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            # EDITAR: el grupo_id no se puede modificar
+            self.fields.pop('grupo_id', None)
+    
     def save(self, commit=True):
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                EXEC Registrar_Grupo %s, %s, %s, %s
-            """, [
-                self.cleaned_data['curso'].curso_id,
-                self.cleaned_data['instructor'].instructor_id,
-                self.cleaned_data['cupo_maximo'],
-                self.cleaned_data['fecha_inicio']
-            ])
+        instance = super().save(commit=False)
         
-        grupo = Grupos.objects.get(
-            curso=self.cleaned_data['curso'],
-            instructor=self.cleaned_data['instructor'],
-            fecha_inicio=self.cleaned_data['fecha_inicio']
-        )
-        return grupo
+        with connection.cursor() as cursor:
+            if self.instance.pk:  # EDITAR - UPDATE
+                cursor.execute("""
+                    UPDATE Grupos 
+                    SET Curso_ID = %s, Instructor_ID = %s, Cupo_Maximo = %s, 
+                        Cupo_Disponible = %s, Fecha_Inicio = %s
+                    WHERE Grupo_ID = %s
+                """, [
+                    instance.curso.curso_id, instance.instructor.instructor_id,
+                    instance.cupo_maximo, instance.cupo_disponible, instance.fecha_inicio,
+                    self.instance.pk
+                ])
+                return instance
+            else:  # CREAR - INSERT usando SP
+                cursor.execute("""
+                    EXEC Registrar_Grupo %s, %s, %s, %s
+                """, [
+                    instance.curso.curso_id,
+                    instance.instructor.instructor_id,
+                    instance.cupo_maximo,
+                    instance.fecha_inicio
+                ])
+                grupo = Grupos.objects.get(
+                    curso=instance.curso,
+                    instructor=instance.instructor,
+                    fecha_inicio=instance.fecha_inicio
+                )
+                return grupo
     
     def save_m2m(self):
         pass
@@ -131,21 +210,40 @@ class InscripcionForm(forms.ModelForm):
         model = Inscripciones
         fields = ('estudiante', 'grupo', 'total_pago')
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            # Las inscripciones NO se editan (solo se crean)
+            self.fields['estudiante'].disabled = True
+            self.fields['grupo'].disabled = True
+            self.fields['total_pago'].disabled = True
+    
     def save(self, commit=True):
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                EXEC Registrar_Inscripcion %s, %s, %s
-            """, [
-                self.cleaned_data['estudiante'].estudiante_id,
-                self.cleaned_data['grupo'].grupo_id,
-                self.cleaned_data['total_pago']
-            ])
+        instance = super().save(commit=False)
         
-        inscripcion = Inscripciones.objects.get(
-            estudiante=self.cleaned_data['estudiante'],
-            grupo=self.cleaned_data['grupo']
-        )
-        return inscripcion
+        with connection.cursor() as cursor:
+            if self.instance.pk:  # EDITAR - solo UPDATE de estado
+                cursor.execute("""
+                    UPDATE Inscripciones 
+                    SET Estado = %s
+                    WHERE Inscripcion_ID = %s
+                """, [
+                    instance.estado, self.instance.pk
+                ])
+                return instance
+            else:  # CREAR - INSERT usando SP
+                cursor.execute("""
+                    EXEC Registrar_Inscripcion %s, %s, %s
+                """, [
+                    instance.estudiante.estudiante_id,
+                    instance.grupo.grupo_id,
+                    instance.total_pago
+                ])
+                inscripcion = Inscripciones.objects.get(
+                    estudiante=instance.estudiante,
+                    grupo=instance.grupo
+                )
+                return inscripcion
     
     def save_m2m(self):
         pass
@@ -158,18 +256,35 @@ class EvaluacionForm(forms.ModelForm):
         model = Evaluaciones
         fields = ('inscripcion', 'calificacion')
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            # EDITAR: campos que se pueden modificar
+            self.fields.pop('comentario_texto', None)
+    
     def save(self, commit=True):
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                EXEC Registrar_Evaluacion %s, %s, %s
-            """, [
-                self.cleaned_data['inscripcion'].inscripcion_id,
-                self.cleaned_data['calificacion'],
-                self.cleaned_data.get('comentario_texto', '')
-            ])
+        instance = super().save(commit=False)
         
-        evaluacion = Evaluaciones.objects.get(inscripcion=self.cleaned_data['inscripcion'])
-        return evaluacion
+        with connection.cursor() as cursor:
+            if self.instance.pk:  # EDITAR - UPDATE
+                cursor.execute("""
+                    UPDATE Evaluaciones 
+                    SET Calificacion = %s
+                    WHERE Evaluacion_ID = %s
+                """, [
+                    instance.calificacion, self.instance.pk
+                ])
+                return instance
+            else:  # CREAR - INSERT usando SP (cifra comentarios)
+                cursor.execute("""
+                    EXEC Registrar_Evaluacion %s, %s, %s
+                """, [
+                    instance.inscripcion.inscripcion_id,
+                    instance.calificacion,
+                    self.cleaned_data.get('comentario_texto', '')
+                ])
+                evaluacion = Evaluaciones.objects.get(inscripcion=instance.inscripcion)
+                return evaluacion
     
     def save_m2m(self):
         pass
@@ -285,7 +400,7 @@ class EstudiantesAdmin(admin.ModelAdmin):
     list_display = ('estudiante_id', 'nombre', 'apellidos', 'usuario', 'telefono', 'fecha_registro')
     search_fields = ('nombre', 'apellidos', 'usuario__email')
     list_filter = ('fecha_registro',)
-    readonly_fields = ('usuario', 'fecha_registro')
+    readonly_fields = ('usuario', 'fecha_registro', 'numero_documento')
     
     fieldsets = (
         ('Información Personal', {
@@ -294,14 +409,12 @@ class EstudiantesAdmin(admin.ModelAdmin):
         ('Datos de Identificación', {
             'fields': ('tipo_documento',)
         }),
-        ('Datos de Cuenta (se cifrarán automáticamente)', {
-            'fields': ('email', 'password', 'numero_documento_texto')
-        }),
     )
     
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if obj:
+            # EDITAR: quitar campos que NO se pueden editar
             if 'email' in form.base_fields:
                 del form.base_fields['email']
             if 'password' in form.base_fields:
@@ -344,14 +457,11 @@ class InstructoresAdmin(admin.ModelAdmin):
     list_display = ('instructor_id', 'nombre', 'apellidos', 'especialidad', 'estado', 'usuario')
     list_filter = ('estado', 'especialidad')
     search_fields = ('nombre', 'apellidos', 'usuario__email')
-    readonly_fields = ('usuario',)
+    readonly_fields = ('usuario', 'cedula_profesional')
     
     fieldsets = (
         ('Información Personal', {
             'fields': ('nombre', 'apellidos', 'especialidad')
-        }),
-        ('Datos de Cuenta (se cifrarán automáticamente)', {
-            'fields': ('email', 'password', 'cedula_profesional_texto')
         }),
         ('Estado', {
             'fields': ('estado',)
@@ -361,6 +471,7 @@ class InstructoresAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if obj:
+            # EDITAR: quitar campos que NO se pueden editar
             if 'email' in form.base_fields:
                 del form.base_fields['email']
             if 'password' in form.base_fields:
@@ -419,7 +530,7 @@ class GruposAdmin(admin.ModelAdmin):
     list_display = ('grupo_id', 'curso', 'instructor', 'cupo_maximo', 'cupo_disponible', 'fecha_inicio', 'ocupacion')
     list_filter = (GrupoCupoFilter, 'fecha_inicio')
     search_fields = ('grupo_id', 'curso__nombre_curso', 'instructor__nombre')
-    readonly_fields = ('grupo_id', 'cupo_disponible')
+    readonly_fields = ('grupo_id',)
     
     def ocupacion(self, obj):
         if obj.cupo_maximo and obj.cupo_maximo > 0:
@@ -451,7 +562,7 @@ class InscripcionesAdmin(admin.ModelAdmin):
     list_display = ('inscripcion_id', 'estudiante', 'grupo', 'fecha_inscripcion', 'estado', 'total_pago', 'promedio')
     list_filter = (InscripcionEstadoFilter, 'fecha_inscripcion')
     search_fields = ('estudiante__nombre', 'grupo__grupo_id')
-    readonly_fields = ('inscripcion_id', 'fecha_inscripcion')
+    readonly_fields = ('inscripcion_id', 'fecha_inscripcion', 'total_pago')
     
     def promedio(self, obj):
         avg = obj.evaluaciones.aggregate(p=Avg('calificacion'))['p']
@@ -481,14 +592,11 @@ class EvaluacionesAdmin(admin.ModelAdmin):
     list_display = ('evaluacion_id', 'inscripcion', 'calificacion', 'fecha')
     search_fields = ('inscripcion__estudiante__nombre',)
     list_filter = ('fecha',)
-    readonly_fields = ('fecha',)
+    readonly_fields = ('fecha', 'comentarios')
     
     fieldsets = (
         ('Información de la Evaluación', {
             'fields': ('inscripcion', 'calificacion')
-        }),
-        ('Comentarios (se cifrarán automáticamente)', {
-            'fields': ('comentario_texto',)
         }),
     )
 
@@ -506,6 +614,8 @@ class PagosAdmin(admin.ModelAdmin):
     
     def has_add_permission(self, request):
         return False
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(DetallesPagos)
@@ -515,6 +625,8 @@ class DetallesPagosAdmin(admin.ModelAdmin):
     readonly_fields = ('detalle_id',)
     
     def has_add_permission(self, request):
+        return False
+    def has_change_permission(self, request, obj=None):
         return False
 
 
@@ -544,63 +656,96 @@ class MensajesAdmin(admin.ModelAdmin):
 
 
 # ======================================================
-# ADMINISTRACIÓN DE AUDITORÍAS (TODAS - SOLO LECTURA)
+# ADMINISTRACIÓN DE AUDITORÍAS (CON CAMPOS COMPLETOS)
 # ======================================================
 
 @admin.register(Auditoria_Inscripciones)
 class AuditoriaInscripcionesAdmin(BaseAuditoriaAdmin):
-    list_display = ('auditoria_ins_id', 'inscripcion_id', 'accion', 'usuario_nombre', 'fecha_evento')
+    list_display = ('auditoria_ins_id', 'inscripcion_id', 'accion', 'usuario_nombre', 
+                    'edo_ant', 'edo_nuevo', 'total_pago_anterior', 'total_pago_nuevo', 'fecha_evento')
     list_filter = ('accion', 'fecha_evento')
     search_fields = ('inscripcion_id', 'usuario_nombre')
+    readonly_fields = [f.name for f in Auditoria_Inscripciones._meta.fields]
 
 
 @admin.register(Auditoria_Evaluaciones)
 class AuditoriaEvaluacionesAdmin(BaseAuditoriaAdmin):
-    list_display = ('auditoria_eva_id', 'evaluacion_id', 'accion', 'usuario_nombre', 'fecha_evento')
+    list_display = ('auditoria_eva_id', 'evaluacion_id', 'accion', 'usuario_nombre', 
+                    'cal_ante', 'cal_nuev', 'fecha_evento')
     list_filter = ('accion', 'fecha_evento')
     search_fields = ('evaluacion_id', 'usuario_nombre')
+    readonly_fields = [f.name for f in Auditoria_Evaluaciones._meta.fields]
 
 
 @admin.register(Auditoria_Pagos)
 class AuditoriaPagosAdmin(BaseAuditoriaAdmin):
-    list_display = ('auditoria_pago_id', 'pago_id', 'accion', 'usuario_nombre', 'fecha_evento')
+    list_display = ('auditoria_pago_id', 'pago_id', 'accion', 'usuario_nombre', 
+                    'monto_ant', 'monto_nuev', 'fecha_evento')
     list_filter = ('accion', 'fecha_evento')
     search_fields = ('pago_id', 'usuario_nombre')
+    readonly_fields = [f.name for f in Auditoria_Pagos._meta.fields]
 
 
 @admin.register(Auditoria_Estudiantes)
 class AuditoriaEstudiantesAdmin(BaseAuditoriaAdmin):
-    list_display = ('auditoria_est_id', 'estudiante_id', 'accion', 'usuario_nombre', 'fecha_evento')
+    list_display = ('auditoria_est_id', 'estudiante_id', 'accion', 'usuario_nombre',
+                    'nombre_ant', 'nombre_nuev', 'apellidos_ant', 'apellidos_nuev',
+                    'telefono_ant', 'telefono_nuev', 'direccion_ant', 'direccion_nuev',
+                    'tipo_documento_ant', 'tipo_documento_nuev', 'fecha_evento')
     list_filter = ('accion', 'fecha_evento')
-    search_fields = ('estudiante_id', 'usuario_nombre')
+    search_fields = ('estudiante_id', 'usuario_nombre', 'nombre_ant', 'nombre_nuev')
+    readonly_fields = [f.name for f in Auditoria_Estudiantes._meta.fields]
 
 
 @admin.register(Auditoria_Entregas)
 class AuditoriaEntregasAdmin(BaseAuditoriaAdmin):
-    list_display = ('auditoria_ent_id', 'entrega_id', 'accion', 'usuario_nombre', 'fecha_evento')
+    list_display = ('auditoria_ent_id', 'entrega_id', 'accion', 'usuario_nombre',
+                    'comentario_ant', 'comentario_nuev', 'calificacion_ant', 'calificacion_nuev', 'fecha_evento')
     list_filter = ('accion', 'fecha_evento')
     search_fields = ('entrega_id', 'usuario_nombre')
+    readonly_fields = [f.name for f in Auditoria_Entregas._meta.fields]
 
 
 @admin.register(Auditoria_Instructores)
 class AuditoriaInstructoresAdmin(BaseAuditoriaAdmin):
-    list_display = ('auditoria_ins_id', 'instructor_id', 'accion', 'usuario_nombre', 'fecha_evento')
+    list_display = ('auditoria_ins_id', 'instructor_id', 'accion', 'usuario_nombre',
+                    'nombre_ant', 'nombre_nuev', 'apellidos_ant', 'apellidos_nuev',
+                    'especialidad_ant', 'especialidad_nuev', 'estado_ant', 'estado_nuev', 'fecha_evento')
     list_filter = ('accion', 'fecha_evento')
     search_fields = ('instructor_id', 'usuario_nombre')
+    readonly_fields = [f.name for f in Auditoria_Instructores._meta.fields]
 
 
 @admin.register(Auditoria_Cursos)
 class AuditoriaCursosAdmin(BaseAuditoriaAdmin):
-    list_display = ('auditoria_cur_id', 'curso_id', 'accion', 'usuario_nombre', 'fecha_evento')
+    list_display = ('auditoria_cur_id', 'curso_id', 'accion', 'usuario_nombre',
+                    'nombre_ant', 'nombre_nuev', 'categoria_ant', 'categoria_nuev',
+                    'duracion_ant', 'duracion_nuev', 'costo_ant', 'costo_nuev',
+                    'estado_ant', 'estado_nuev', 'fecha_evento')
     list_filter = ('accion', 'fecha_evento')
     search_fields = ('curso_id', 'usuario_nombre')
+    readonly_fields = [f.name for f in Auditoria_Cursos._meta.fields]
 
 
 @admin.register(Auditoria_Grupos)
 class AuditoriaGruposAdmin(BaseAuditoriaAdmin):
-    list_display = ('auditoria_gru_id', 'grupo_id', 'accion', 'usuario_nombre', 'fecha_evento')
+    list_display = ('auditoria_gru_id', 'grupo_id', 'accion', 'usuario_nombre',
+                    'curso_ant', 'curso_nuev', 'instructor_ant', 'instructor_nuev',
+                    'cupo_maximo_ant', 'cupo_maximo_nuev', 'cupo_disponible_ant', 'cupo_disponible_nuev',
+                    'fecha_inicio_ant', 'fecha_inicio_nuev', 'fecha_evento')
     list_filter = ('accion', 'fecha_evento')
     search_fields = ('grupo_id', 'usuario_nombre')
+    readonly_fields = [f.name for f in Auditoria_Grupos._meta.fields]
+
+
+# ======================================================
+# MODELOS FRAGMENTADOS VERTICALES (SOLO REGISTRO)
+# ======================================================
+
+admin.site.register(Estudiantes_Normales)
+admin.site.register(Estudiantes_Sensibles)
+admin.site.register(Instructores_Normales)
+admin.site.register(Instructores_Cedulas)
 
 
 # ======================================================

@@ -15,7 +15,15 @@ from .models import (
     Auditoria_Inscripciones, Auditoria_Evaluaciones, Auditoria_Pagos,
     Auditoria_Estudiantes, Auditoria_Entregas, Auditoria_Instructores,
     Auditoria_Cursos, Auditoria_Grupos,
-    Tareas, Entregas, Mensajes
+    Tareas, Entregas, Mensajes,
+    # Modelos fragmentados horizontales
+    Estudiantes_INE, Estudiantes_Pasaporte,
+    Instructores_TI, Instructores_Redes, Instructores_Otra,
+    Cursos_Programacion, Cursos_Redes, Cursos_Ciberseguridad, Cursos_Otra,
+    Grupos_Disponibles, Grupos_Llenos,
+    # Modelos fragmentados verticales
+    Estudiantes_Normales, Estudiantes_Sensibles,
+    Instructores_Normales, Instructores_Cedulas
 )
 
 # ============================================
@@ -551,7 +559,18 @@ def admin_dashboard(request):
 
 @login_required
 def admin_gestionar_cursos(request):
-    cursos = Cursos.objects.all().order_by('curso_id')
+    categoria = request.GET.get('categoria')
+    
+    if categoria == 'Programacion':
+        cursos = Cursos_Programacion.objects.all()
+    elif categoria == 'Redes':
+        cursos = Cursos_Redes.objects.all()
+    elif categoria == 'Ciberseguridad':
+        cursos = Cursos_Ciberseguridad.objects.all()
+    elif categoria == 'Otra':
+        cursos = Cursos_Otra.objects.all()
+    else:
+        cursos = Cursos.objects.all()
     
     try:
         usuario = Usuarios.objects.get(email=request.user.username)
@@ -561,6 +580,7 @@ def admin_gestionar_cursos(request):
     
     return render(request, 'Administrador/Admin_Cursos/gestionar_cursos.html', {
         'cursos': cursos,
+        'categoria_seleccionada': categoria,
         'mensajes_no_leidos': mensajes_no_leidos
     })
 
@@ -661,7 +681,14 @@ def admin_eliminar_curso(request, curso_id):
 
 @login_required
 def admin_gestionar_grupos(request):
-    grupos = Grupos.objects.all().select_related('curso', 'instructor')
+    estado = request.GET.get('estado')
+    
+    if estado == 'disponible':
+        grupos = Grupos_Disponibles.objects.all().select_related('curso', 'instructor')
+    elif estado == 'lleno':
+        grupos = Grupos_Llenos.objects.all().select_related('curso', 'instructor')
+    else:
+        grupos = Grupos.objects.all().select_related('curso', 'instructor')
     
     try:
         usuario = Usuarios.objects.get(email=request.user.username)
@@ -671,12 +698,9 @@ def admin_gestionar_grupos(request):
     
     return render(request, 'Administrador/Admin_Grupos/gestionar_grupos.html', {
         'grupos': grupos,
+        'estado_seleccionado': estado,
         'mensajes_no_leidos': mensajes_no_leidos
     })
-
-
-
-
 
 @login_required
 def admin_crear_grupo(request):
@@ -781,7 +805,16 @@ def admin_eliminar_grupo(request, grupo_id):
 
 @login_required
 def admin_gestionar_instructores(request):
-    instructores = Instructores.objects.all().select_related('usuario')
+    especialidad = request.GET.get('especialidad')
+    
+    if especialidad == 'TI':
+        instructores = Instructores_TI.objects.all().select_related('usuario')
+    elif especialidad == 'Redes':
+        instructores = Instructores_Redes.objects.all().select_related('usuario')
+    elif especialidad == 'Otra':
+        instructores = Instructores_Otra.objects.all().select_related('usuario')
+    else:
+        instructores = Instructores.objects.all().select_related('usuario')
     
     try:
         usuario = Usuarios.objects.get(email=request.user.username)
@@ -791,6 +824,7 @@ def admin_gestionar_instructores(request):
     
     return render(request, 'Administrador/Admin_Instructores/gestionar_instructores.html', {
         'instructores': instructores,
+        'especialidad_seleccionada': especialidad,
         'mensajes_no_leidos': mensajes_no_leidos
     })
 
@@ -956,7 +990,14 @@ def admin_eliminar_instructor(request, instructor_id):
 
 @login_required
 def admin_gestionar_estudiantes(request):
-    estudiantes = Estudiantes.objects.all().select_related('usuario')
+    tipo = request.GET.get('tipo_documento')
+    
+    if tipo == 'INE':
+        estudiantes = Estudiantes_INE.objects.all().select_related('usuario')
+    elif tipo == 'Pasaporte':
+        estudiantes = Estudiantes_Pasaporte.objects.all().select_related('usuario')
+    else:
+        estudiantes = Estudiantes.objects.all().select_related('usuario')
     
     try:
         usuario = Usuarios.objects.get(email=request.user.username)
@@ -966,6 +1007,7 @@ def admin_gestionar_estudiantes(request):
     
     return render(request, 'Administrador/Admin_Estudiante/gestionar_estudiantes.html', {
         'estudiantes': estudiantes,
+        'tipo_seleccionado': tipo,
         'mensajes_no_leidos': mensajes_no_leidos
     })
 

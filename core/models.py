@@ -415,3 +415,241 @@ class Mensajes(models.Model):
 
     def __str__(self):
         return f"Mensaje {self.mensaje_id} - {self.emisor.email} -> {self.receptor.email}"
+    
+
+
+# ============================================
+# MODELOS PARA FRAGMENTACIÓN HORIZONTAL
+# ============================================
+
+class Estudiantes_INE(models.Model):
+    estudiante_id = models.AutoField(primary_key=True)
+    usuario = models.OneToOneField(Usuarios, on_delete=models.CASCADE, db_column='Usuario_ID')
+    nombre = models.CharField(max_length=100)
+    apellidos = models.CharField(max_length=100)
+    direccion = models.CharField(max_length=150, null=True, blank=True)
+    telefono = models.CharField(max_length=20, null=True, blank=True)
+    tipo_documento = models.CharField(max_length=20, null=True, blank=True)
+    numero_documento = models.BinaryField()
+    fecha_registro = models.DateField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'Estudiantes_INE'
+        managed = False
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellidos}"
+
+
+class Estudiantes_Pasaporte(models.Model):
+    estudiante_id = models.AutoField(primary_key=True)
+    usuario = models.OneToOneField(Usuarios, on_delete=models.CASCADE, db_column='Usuario_ID')
+    nombre = models.CharField(max_length=100)
+    apellidos = models.CharField(max_length=100)
+    direccion = models.CharField(max_length=150, null=True, blank=True)
+    telefono = models.CharField(max_length=20, null=True, blank=True)
+    tipo_documento = models.CharField(max_length=20, null=True, blank=True)
+    numero_documento = models.BinaryField()
+    fecha_registro = models.DateField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'Estudiantes_Pasaporte'
+        managed = False
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellidos}"
+
+
+class Instructores_TI(models.Model):
+    instructor_id = models.AutoField(primary_key=True)
+    usuario = models.OneToOneField(Usuarios, on_delete=models.CASCADE, db_column='Usuario_ID')
+    nombre = models.CharField(max_length=50)
+    apellidos = models.CharField(max_length=50)
+    especialidad = models.CharField(max_length=50, null=True, blank=True)
+    cedula_profesional = models.BinaryField()
+    estado = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'Instructores_TI'
+        managed = False
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellidos}"
+
+
+class Instructores_Redes(models.Model):
+    instructor_id = models.AutoField(primary_key=True)
+    usuario = models.OneToOneField(Usuarios, on_delete=models.CASCADE, db_column='Usuario_ID')
+    nombre = models.CharField(max_length=50)
+    apellidos = models.CharField(max_length=50)
+    especialidad = models.CharField(max_length=50, null=True, blank=True)
+    cedula_profesional = models.BinaryField()
+    estado = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'Instructores_Redes'
+        managed = False
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellidos}"
+
+
+class Instructores_Otra(models.Model):
+    instructor_id = models.AutoField(primary_key=True)
+    usuario = models.OneToOneField(Usuarios, on_delete=models.CASCADE, db_column='Usuario_ID')
+    nombre = models.CharField(max_length=50)
+    apellidos = models.CharField(max_length=50)
+    especialidad = models.CharField(max_length=50, null=True, blank=True)
+    cedula_profesional = models.BinaryField()
+    estado = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'Instructores_Otra'
+        managed = False
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellidos}"
+
+
+class Cursos_Programacion(models.Model):
+    curso_id = models.AutoField(primary_key=True)
+    nombre_curso = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=50, null=True, blank=True)
+    duracion_horas = models.IntegerField(null=True, blank=True)
+    costo = models.DecimalField(max_digits=10, decimal_places=2)
+    estado = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'Cursos_Programacion'
+        managed = False
+
+    def __str__(self):
+        return f"{self.nombre_curso} - ${self.costo}"
+
+
+class Cursos_Redes(models.Model):
+    curso_id = models.AutoField(primary_key=True)
+    nombre_curso = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=50, null=True, blank=True)
+    duracion_horas = models.IntegerField(null=True, blank=True)
+    costo = models.DecimalField(max_digits=10, decimal_places=2)
+    estado = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'Cursos_Redes'
+        managed = False
+
+    def __str__(self):
+        return f"{self.nombre_curso} - ${self.costo}"
+
+
+class Cursos_Ciberseguridad(models.Model):
+    curso_id = models.AutoField(primary_key=True)
+    nombre_curso = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=50, null=True, blank=True)
+    duracion_horas = models.IntegerField(null=True, blank=True)
+    costo = models.DecimalField(max_digits=10, decimal_places=2)
+    estado = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'Cursos_Ciberseguridad'
+        managed = False
+
+    def __str__(self):
+        return f"{self.nombre_curso} - ${self.costo}"
+
+
+class Cursos_Otra(models.Model):
+    curso_id = models.AutoField(primary_key=True)
+    nombre_curso = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=50, null=True, blank=True)
+    duracion_horas = models.IntegerField(null=True, blank=True)
+    costo = models.DecimalField(max_digits=10, decimal_places=2)
+    estado = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'Cursos_Otra'
+        managed = False
+
+    def __str__(self):
+        return f"{self.nombre_curso} - ${self.costo}"
+
+
+class Grupos_Disponibles(models.Model):
+    grupo_id = models.CharField(primary_key=True, max_length=20, db_column='Grupo_ID')
+    curso = models.ForeignKey(Cursos, on_delete=models.CASCADE, db_column='Curso_ID', related_name='grupos_disponibles')
+    instructor = models.ForeignKey(Instructores, on_delete=models.CASCADE, db_column='Instructor_ID')
+    cupo_maximo = models.IntegerField()
+    cupo_disponible = models.IntegerField()
+    fecha_inicio = models.DateField()
+
+    class Meta:
+        db_table = 'Grupos_Disponibles'
+        managed = False
+
+    def __str__(self):
+        return f"{self.grupo_id} - {self.curso.nombre_curso}"
+
+
+class Grupos_Llenos(models.Model):
+    grupo_id = models.CharField(primary_key=True, max_length=20, db_column='Grupo_ID')
+    curso = models.ForeignKey(Cursos, on_delete=models.CASCADE, db_column='Curso_ID', related_name='grupos_llenos')
+    instructor = models.ForeignKey(Instructores, on_delete=models.CASCADE, db_column='Instructor_ID')
+    cupo_maximo = models.IntegerField()
+    cupo_disponible = models.IntegerField()
+    fecha_inicio = models.DateField()
+
+    class Meta:
+        db_table = 'Grupos_Llenos'
+        managed = False
+
+    def __str__(self):
+        return f"{self.grupo_id} - {self.curso.nombre_curso}"
+
+
+# ============================================
+# MODELOS PARA FRAGMENTACIÓN VERTICAL (NO visible en admin)
+# ============================================
+
+class Estudiantes_Normales(models.Model):
+    estudiante_id = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=100)
+    apellidos = models.CharField(max_length=100)
+    direccion = models.CharField(max_length=150, null=True, blank=True)
+    telefono = models.CharField(max_length=20, null=True, blank=True)
+    fecha_registro = models.DateField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'Estudiantes_Normales'
+        managed = False
+
+
+class Estudiantes_Sensibles(models.Model):
+    estudiante_id = models.AutoField(primary_key=True)
+    tipo_documento = models.CharField(max_length=20, null=True, blank=True)
+    numero_documento = models.BinaryField()
+
+    class Meta:
+        db_table = 'Estudiantes_Sensibles'
+        managed = False
+
+
+class Instructores_Normales(models.Model):
+    instructor_id = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=50)
+    apellidos = models.CharField(max_length=50)
+    especialidad = models.CharField(max_length=50, null=True, blank=True)
+    estado = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'Instructores_Normales'
+        managed = False
+
+
+class Instructores_Cedulas(models.Model):
+    instructor_id = models.AutoField(primary_key=True)
+    cedula_profesional = models.BinaryField()
+
+    class Meta:
+        db_table = 'Instructores_Cedulas'
+        managed = False

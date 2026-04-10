@@ -67,6 +67,35 @@
         </div>
     </section>
 
+    <!-- Filtro por Especialidad (Fragmentación Horizontal) -->
+    <div class="container mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <form method="GET" class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label class="fw-bold">Filtrar por especialidad:</label>
+                    </div>
+                    <div class="col-auto">
+                        <select name="especialidad" class="form-select">
+                            <option value="">Todos los instructores</option>
+                            <option value="TI" {% if especialidad_seleccionada == 'TI' %}selected{% endif %}>TI (Programación, Frontend, DevOps, etc.)</option>
+                            <option value="Redes" {% if especialidad_seleccionada == 'Redes' %}selected{% endif %}>Redes y Ciberseguridad</option>
+                            <option value="Otra" {% if especialidad_seleccionada == 'Otra' %}selected{% endif %}>Otra especialidad</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-main">Filtrar</button>
+                    </div>
+                    {% if especialidad_seleccionada %}
+                    <div class="col-auto">
+                        <a href="/admin-gestionar-instructores/" class="btn btn-outline-secondary">Limpiar filtro</a>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="container mb-5">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
